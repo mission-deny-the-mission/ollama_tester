@@ -92,7 +92,7 @@ Create a `config.json` file in the project directory. Example:
 python test_suite.py
 ```
 
-This will use `config.json` from the current directory.
+This will use `config.json` from the current directory and test all configured servers.
 
 ### Custom Configuration File
 
@@ -106,6 +106,18 @@ python test_suite.py --config my_config.json
 python test_suite.py --prompt "Explain quantum computing in simple terms"
 ```
 
+### Test Only Ollama Servers
+
+```bash
+python test_suite.py --ollama-only
+```
+
+### Test Only OpenAI-Compatible Servers
+
+```bash
+python test_suite.py --openai-only
+```
+
 ### Save Results to JSON
 
 ```bash
@@ -115,7 +127,7 @@ python test_suite.py --output results.json
 ### Combined Options
 
 ```bash
-python test_suite.py --config config.json --prompt "Your prompt here" --output results.json
+python test_suite.py --config config.json --prompt "Your prompt here" --ollama-only --output results.json
 ```
 
 ## Output

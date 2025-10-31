@@ -251,8 +251,13 @@ class APITester:
         return metrics
 
 
-async def run_parallel_tests(config: Dict[str, Any]) -> List[TestMetrics]:
-    """Run tests in parallel across all configured servers."""
+async def run_parallel_tests(config: Dict[str, Any], server_type_filter: Optional[str] = None) -> List[TestMetrics]:
+    """Run tests in parallel across all configured servers.
+    
+    Args:
+        config: Configuration dictionary
+        server_type_filter: Optional filter - "ollama" or "openai" to test only that type
+    """
     test_prompt = config.get("test_prompt", "Write a short story about a robot learning to paint.")
     results = []
     
@@ -260,38 +265,40 @@ async def run_parallel_tests(config: Dict[str, Any]) -> List[TestMetrics]:
         tasks = []
         
         # Create tasks for Ollama instances
-        for server_config in config.get("ollama_servers", []):
-            server_name = server_config["name"]
-            base_url = server_config["base_url"]
-            model = server_config["model"]
-            stream = server_config.get("stream", True)
-            
-            task = tester.test_ollama(
-                server_name=server_name,
-                base_url=base_url,
-                model=model,
-                prompt=test_prompt,
-                stream=stream
-            )
-            tasks.append(task)
+        if server_type_filter is None or server_type_filter == "ollama":
+            for server_config in config.get("ollama_servers", []):
+                server_name = server_config["name"]
+                base_url = server_config["base_url"]
+                model = server_config["model"]
+                stream = server_config.get("stream", True)
+                
+                task = tester.test_ollama(
+                    server_name=server_name,
+                    base_url=base_url,
+                    model=model,
+                    prompt=test_prompt,
+                    stream=stream
+                )
+                tasks.append(task)
         
         # Create tasks for OpenAI-compatible servers
-        for server_config in config.get("openai_servers", []):
-            server_name = server_config["name"]
-            base_url = server_config["base_url"]
-            model = server_config["model"]
-            api_key = server_config.get("api_key")
-            stream = server_config.get("stream", True)
-            
-            task = tester.test_openai_compatible(
-                server_name=server_name,
-                base_url=base_url,
-                model=model,
-                prompt=test_prompt,
-                api_key=api_key,
-                stream=stream
-            )
-            tasks.append(task)
+        if server_type_filter is None or server_type_filter == "openai":
+            for server_config in config.get("openai_servers", []):
+                server_name = server_config["name"]
+                base_url = server_config["base_url"]
+                model = server_config["model"]
+                api_key = server_config.get("api_key")
+                stream = server_config.get("stream", True)
+                
+                task = tester.test_openai_compatible(
+                    server_name=server_name,
+                    base_url=base_url,
+                    model=model,
+                    prompt=test_prompt,
+                    api_key=api_key,
+                    stream=stream
+                )
+                tasks.append(task)
         
         # Run all tasks in parallel
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -383,8 +390,15 @@ def main():
     parser.add_argument("--config", "-c", default="config.json", help="Path to configuration JSON file")
     parser.add_argument("--output", "-o", help="Path to save JSON results (optional)")
     parser.add_argument("--prompt", "-p", help="Override test prompt")
+    parser.add_argument("--ollama-only", action="store_true", help="Test only Ollama servers")
+    parser.add_argument("--openai-only", action="store_true", help="Test only OpenAI-compatible servers")
     
     args = parser.parse_args()
+    
+    # Validate mutually exclusive options
+    if args.ollama_only and args.openai_only:
+        print("Error: --ollama-only and --openai-only cannot be used together")
+        return 1
     
     # Load configuration
     try:
@@ -402,11 +416,34 @@ def main():
     if args.prompt:
         config["test_prompt"] = args.prompt
     
-    print(f"Running parallel tests against {len(config.get('ollama_servers', [])) + len(config.get('openai_servers', []))} servers...")
+    # Determine server type filter
+    server_type_filter = None
+    if args.ollama_only:
+        server_type_filter = "ollama"
+    elif args.openai_only:
+        server_type_filter = "openai"
+    
+    # Count servers based on filter
+    if server_type_filter == "ollama":
+        server_count = len(config.get('ollama_servers', []))
+        server_type = "Ollama"
+    elif server_type_filter == "openai":
+        server_count = len(config.get('openai_servers', []))
+        server_type = "OpenAI-compatible"
+    else:
+        server_count = len(config.get('ollama_servers', [])) + len(config.get('openai_servers', []))
+        server_type = "all"
+    
+    if server_count == 0:
+        filter_msg = f" with filter '{server_type_filter}'" if server_type_filter else ""
+        print(f"Error: No servers found{filter_msg} in configuration file")
+        return 1
+    
+    print(f"Running parallel tests against {server_count} {server_type} server(s)...")
     print(f"Test prompt: {config.get('test_prompt', 'N/A')}")
     
     # Run tests
-    results = asyncio.run(run_parallel_tests(config))
+    results = asyncio.run(run_parallel_tests(config, server_type_filter))
     
     # Print results
     print_results(results)
