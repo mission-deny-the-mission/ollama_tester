@@ -1,0 +1,22 @@
+{
+  "test_prompt": "Write a short story about a robot learning to paint.",
+  "timeout": 300,
+  "ollama_servers": [
+    {
+      "name": "Local Ollama",
+      "base_url": "http://localhost:11434",
+      "model": "llama2",
+      "stream": true
+    }
+  ],
+  "openai_servers": [
+    {
+      "name": "Example OpenAI API",
+      "base_url": "https://api.openai.com",
+      "model": "gpt-3.5-turbo",
+      "api_key": "your-api-key-here",
+      "stream": true
+    }
+  ]
+}
+
