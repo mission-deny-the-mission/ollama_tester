@@ -57,7 +57,8 @@ class APITester:
         """Test an Ollama instance."""
         metrics = TestMetrics(
             server_name=server_name,
-            endpoint=base_url
+            endpoint=base_url,
+            success=False
         )
         
         url = f"{base_url}/api/generate"
@@ -147,7 +148,8 @@ class APITester:
         """Test an OpenAI-compatible API endpoint."""
         metrics = TestMetrics(
             server_name=server_name,
-            endpoint=base_url
+            endpoint=base_url,
+            success=False
         )
         
         url = f"{base_url}/v1/chat/completions"
@@ -386,19 +388,18 @@ def save_results_json(results: List[TestMetrics], output_file: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test Ollama instances and OpenAI-compatible APIs in parallel")
+    parser = argparse.ArgumentParser(
+        description="Test Ollama instances and OpenAI-compatible APIs in parallel",
+        epilog="Examples:\n  python3 test_suite.py\n  python3 test_suite.py ollama\n  python3 test_suite.py openai",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("server_type", nargs="?", choices=["ollama", "openai"], 
+                       help="Test only specified server type (default: test all)")
     parser.add_argument("--config", "-c", default="config.json", help="Path to configuration JSON file")
     parser.add_argument("--output", "-o", help="Path to save JSON results (optional)")
     parser.add_argument("--prompt", "-p", help="Override test prompt")
-    parser.add_argument("--ollama-only", action="store_true", help="Test only Ollama servers")
-    parser.add_argument("--openai-only", action="store_true", help="Test only OpenAI-compatible servers")
     
     args = parser.parse_args()
-    
-    # Validate mutually exclusive options
-    if args.ollama_only and args.openai_only:
-        print("Error: --ollama-only and --openai-only cannot be used together")
-        return 1
     
     # Load configuration
     try:
@@ -416,12 +417,8 @@ def main():
     if args.prompt:
         config["test_prompt"] = args.prompt
     
-    # Determine server type filter
-    server_type_filter = None
-    if args.ollama_only:
-        server_type_filter = "ollama"
-    elif args.openai_only:
-        server_type_filter = "openai"
+    # Determine server type filter from positional argument
+    server_type_filter = args.server_type
     
     # Count servers based on filter
     if server_type_filter == "ollama":

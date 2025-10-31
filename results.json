@@ -1,0 +1,15 @@
+[
+  {
+    "server_name": "Server_0",
+    "endpoint": "unknown",
+    "success": false,
+    "time_to_first_token": null,
+    "tokens_per_second": null,
+    "total_time": null,
+    "total_tokens": null,
+    "completion_tokens": null,
+    "prompt_tokens": null,
+    "error_message": "TestMetrics.__init__() missing 1 required positional argument: 'success'",
+    "timestamp": "2025-10-31T21:19:22.768545"
+  }
+]

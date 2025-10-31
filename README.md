@@ -109,13 +109,13 @@ python test_suite.py --prompt "Explain quantum computing in simple terms"
 ### Test Only Ollama Servers
 
 ```bash
-python test_suite.py --ollama-only
+python test_suite.py ollama
 ```
 
 ### Test Only OpenAI-Compatible Servers
 
 ```bash
-python test_suite.py --openai-only
+python test_suite.py openai
 ```
 
 ### Save Results to JSON
@@ -127,7 +127,7 @@ python test_suite.py --output results.json
 ### Combined Options
 
 ```bash
-python test_suite.py --config config.json --prompt "Your prompt here" --ollama-only --output results.json
+python test_suite.py ollama --config config.json --prompt "Your prompt here" --output results.json
 ```
 
 ## Output
