@@ -5,7 +5,7 @@
     {
       "name": "Local Ollama",
       "base_url": "http://localhost:11434",
-      "model": "sam360/LFM2-700M",
+      "model": "sam860/LFM2-700M",
       "stream": true
     }
   ],
